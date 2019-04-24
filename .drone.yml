@@ -8,14 +8,17 @@ steps:
       - "[ $(git rev-list --count HEAD) -eq 1 ] && exit 0"
       - |
         git diff --name-only HEAD~1 HEAD | \
-          grep kaniko-drone > /dev/null && \
+          grep $SUBDIR > /dev/null || \
           exit 78
+    environment:
+      SUBDIR: kaniko-drone
 
   - name: build_program
     image: golang:1.12
     commands:
       - cd kaniko-drone
       - go mod download
+      - go test -v ./...
       - go build .
 
   - name: build_image
@@ -23,8 +26,9 @@ steps:
     settings:
       context: ./kaniko-drone
       repo: stevenxie/kaniko-drone
-      tags: latest
-      tag_files: VERSION
+      tags:
+        - latest
+        - $(cat VERSION)
       username: stevenxie
       password:
         from_secret: docker_pass

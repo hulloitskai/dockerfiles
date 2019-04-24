@@ -63,8 +63,9 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err = cmd.Run(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok { // filter out exec.ExitErrors
-			ess.Die("Error: running Kaniko command:", err)
+		if eerr, ok := err.(*exec.ExitError); ok {
+			os.Exit(eerr.ExitCode())
 		}
+		ess.Die("Error: running Kaniko command:", err)
 	}
 }

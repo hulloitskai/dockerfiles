@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,8 +34,7 @@ type config struct {
 	NoPush     bool   `split_words:"true"`
 	Repo       string
 	Tags       []string
-	TagFiles   []string `split_words:"true"`
-	TarPath    string   `split_words:"true"`
+	TarPath    string `split_words:"true"`
 	Verbosity  string
 
 	PluginDryRun     bool `split_words:"true"` // for internal use
@@ -59,7 +57,7 @@ func newConfigFromEnv() (*config, error) {
 }
 
 func (cfg *config) Validate() error {
-	if (len(cfg.Tags)+len(cfg.TagFiles) > 0) && (cfg.Repo == "") {
+	if (len(cfg.Tags) > 0) && (cfg.Repo == "") {
 		return errors.New("tag(s) were specified, but no repo was set")
 	}
 	// Context must be an absolute path.
@@ -84,9 +82,6 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 	if cfg.Dockerfile != "" {
 		args = append(args, "--dockerfile", cfg.Dockerfile)
 	}
-	for _, arg := range cfg.BuildArgs {
-		args = append(args, "--build-arg", arg)
-	}
 	if cfg.CacheDir != "" {
 		args = append(args, "--cache-dir", cfg.CacheDir)
 	}
@@ -97,39 +92,45 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 		args = append(args, "--verbosity", cfg.Verbosity)
 	}
 
-	// Parse tag files.
-	var (
-		tags  = cfg.Tags
-		regex = regexp.MustCompile(tagRegex)
-	)
-	for _, name := range cfg.TagFiles {
-		tag, err := cfg.readTagFile(name, regex)
+	// Parse build args using shell.
+	for _, arg := range cfg.BuildArgs {
+		val, err := cfg.resolveWithShell(arg)
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("resolving build arg '%s': %w", arg, err)
 		}
-		tags = append(tags, tag)
+		args = append(args, "--build-arg", val)
 	}
 
-	// Construct destination flags.
-	for _, tag := range tags {
-		args = append(args, "--destination", fmt.Sprintf("%s:%s", cfg.Repo, tag))
+	// Parse and validate tags and destinations.
+	regex := regexp.MustCompile(tagRegex)
+	for _, tag := range cfg.Tags {
+		val, err := cfg.resolveWithShell(tag)
+		if err != nil {
+			return nil, errors.Errorf("resolving tag '%s': %w", tag, err)
+		}
+		if !regex.MatchString(val) {
+			return nil, errors.Errorf("'%q' is not a valid tag", val)
+		}
+		args = append(args, "--destination", fmt.Sprintf("%s:%s", cfg.Repo, val))
 	}
 	return exec.Command(executorCommand, args...), nil
 }
 
-func (cfg *config) readTagFile(name string, r *regexp.Regexp) (string, error) {
-	if !filepath.IsAbs(name) && (cfg.Context != "") {
-		name = filepath.Join(cfg.Context, name)
-	}
-	rawtag, err := ioutil.ReadFile(name)
+func (cfg *config) resolveWithShell(value string) (string, error) {
+	var (
+		wrapper = fmt.Sprintf("VAL=\"%s\"; printf %%s \"$VAL\"", value)
+		cmd     = exec.Command("sh", "-ec", wrapper)
+	)
+	cmd.Dir = cfg.Context
+	raw, err := cmd.Output()
 	if err != nil {
-		return "", errors.Errorf("reading tag from '%s': %w", name, err)
+		if eerr, ok := err.(*exec.ExitError); ok && (len(eerr.Stderr) > 0) {
+			stderr := bytes.TrimSpace(eerr.Stderr)
+			return "", errors.Errorf("%v: %s", eerr, stderr)
+		}
+		return "", err
 	}
-	rawtag = bytes.TrimSpace(rawtag)
-	if !r.Match(rawtag) {
-		return "", errors.Errorf("'%q' is not a valid tag", name)
-	}
-	return string(rawtag), nil
+	return string(bytes.TrimSpace(raw)), nil
 }
 
 func (cfg *config) EditDockerConfig(file *os.File) error {
