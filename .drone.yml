@@ -33,3 +33,32 @@ steps:
       password:
         from_secret: docker_pass
       disable_gcr_helper: true
+
+---
+
+kind: Pipeline
+name: frp
+
+steps:
+  - name: precondition
+    image: alpine/git
+    commands:
+      - "[ $(git rev-list --count HEAD) -eq 1 ] && exit 0"
+      - |
+        git diff --name-only HEAD~1 HEAD | \
+          grep $SUBDIR > /dev/null || \
+          exit 78
+    environment:
+      SUBDIR: frp
+
+  - name: build_image
+    image: stevenxie/kaniko-drone:latest
+    settings:
+      context: ./frp
+      repo: stevenxie/frp
+      tags:
+        - latest
+        - $(cat VERSION)
+      username: stevenxie
+      password:
+        from_secret: docker_pass
