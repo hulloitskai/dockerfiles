@@ -22,7 +22,7 @@ steps:
       - go build .
 
   - name: build_image
-    image: stevenxie/kaniko-drone:latest
+    image: stevenxie/kaniko-drone
     settings:
       context: ./kaniko-drone
       build_args: VERSION=$(cat VERSION)
@@ -52,8 +52,19 @@ steps:
     environment:
       SUBDIR: frp
 
-  - name: build_image
-    image: stevenxie/kaniko-drone:latest
+  - name: download
+    image: busybox
+    commands:
+      - cd frp
+      - export VERSION=$(cat VERSION)
+      - |
+        wget -O frp.tar.gz \
+          https://github.com/fatedier/frp/releases/download/v$${VERSION}/frp_$${VERSION}_linux_amd64.tar.gz
+      - tar -zxvf frp.tar.gz
+      - 'cp ./frp_$${VERSION}_linux_amd64/* . || :'
+
+  - name: build
+    image: stevenxie/kaniko-drone
     settings:
       context: ./frp
       build_args: VERSION=$(cat VERSION)
@@ -61,6 +72,41 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
+      username: stevenxie
+      password:
+        from_secret: docker_pass
+
+---
+
+kind: Pipeline
+name: revive
+
+steps:
+  - name: precondition
+    image: alpine/git
+    commands:
+      - "[ $(git rev-list --count HEAD) -eq 1 ] && exit 0"
+      - |
+        git diff --name-only HEAD~1 HEAD | \
+          egrep "($SUBDIR|.drone.yml)" > /dev/null || \
+          exit 78
+    environment:
+      SUBDIR: revive
+
+  - name: download
+    image: golang:1.12
+    commands:
+      - go get github.com/mgechev/revive
+      - cp $GOPATH/bin/revive ./revive/revive
+    environment:
+      GO111MODULE: off
+
+  - name: build
+    image: stevenxie/kaniko-drone
+    settings:
+      context: ./revive
+      repo: stevenxie/revive
+      tags: latest
       username: stevenxie
       password:
         from_secret: docker_pass
