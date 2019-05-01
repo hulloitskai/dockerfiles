@@ -1,0 +1,8 @@
+github.com/kelseyhightower/envconfig v1.3.0 h1:IvRS4f2VcIQy6j4ORGIf9145T/AsUB+oY8LyvN8BXNM=
+github.com/kelseyhightower/envconfig v1.3.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
+github.com/stevenxie/dockerfiles/kaniko-drone v0.0.0-20190429135916-f57f55344b6e h1:EKfOw8oEDIzEefwlWHKPeWyWVxWEXX+VsuuL6YjpgAs=
+github.com/stevenxie/dockerfiles/kaniko-drone v0.0.0-20190429135916-f57f55344b6e/go.mod h1:C22e8MI3Te1aMLY7cwl3q3tUQFsb8A2j5KGwAjyJ6i0=
+github.com/unixpickle/essentials v0.0.0-20180916162721-ae02bc395f1d h1:mRwAxGRBEFcoKSWDoX5CROMJo6xmXBh4rNqOmyhpRi0=
+github.com/unixpickle/essentials v0.0.0-20180916162721-ae02bc395f1d/go.mod h1:lrJ3sPtA3BLwJeUSU3/Fh4E3eK+HMap+5XEwEKc2Tb8=
+golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373 h1:PPwnA7z1Pjf7XYaBP9GL1VAMZmcIWyFz7QCMSIIa3Bg=
+golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
