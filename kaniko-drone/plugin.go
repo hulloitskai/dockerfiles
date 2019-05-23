@@ -98,7 +98,9 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 		if err != nil {
 			return nil, errors.Errorf("resolving build arg '%s': %w", arg, err)
 		}
-		args = append(args, "--build-arg", val)
+		if val != "" { // ignore empty args
+			args = append(args, "--build-arg", val)
+		}
 	}
 
 	// Parse and validate tags and destinations.
@@ -107,6 +109,9 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 		val, err := cfg.resolveWithShell(tag)
 		if err != nil {
 			return nil, errors.Errorf("resolving tag '%s': %w", tag, err)
+		}
+		if val == "" { // ignore empty tags
+			continue
 		}
 		if !regex.MatchString(val) {
 			return nil, errors.Errorf("'%q' is not a valid tag", val)
