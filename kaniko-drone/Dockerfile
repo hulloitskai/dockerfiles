@@ -1,4 +1,4 @@
-ARG VERSION=v0.9.0
+ARG VERSION=v0.10.0
 FROM gcr.io/kaniko-project/executor:debug-${VERSION}
 
 # Add labels.
