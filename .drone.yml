@@ -19,7 +19,11 @@ steps:
       - cd kaniko-drone
       - go mod download
       - go test -v ./...
+      - export CGO_ENABLED=0
       - go build .
+    environment:
+      GO111MODULE: 'on'
+      GOPROXY: https://goproxy.io
 
   - name: build_image
     image: stevenxie/kaniko-drone
@@ -101,7 +105,7 @@ steps:
       - go get github.com/mgechev/revive
       - cp $GOPATH/bin/revive ./revive/revive
     environment:
-      GO111MODULE: off
+      GO111MODULE: 'off'
 
   - name: build
     image: stevenxie/kaniko-drone

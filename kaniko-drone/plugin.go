@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/cockroachdb/errors"
 	"github.com/kelseyhightower/envconfig"
-	errors "golang.org/x/xerrors"
 )
 
 const (
@@ -65,7 +65,7 @@ func (cfg *config) Validate() error {
 		var err error
 		cfg.Context, err = filepath.Abs(cfg.Context)
 		if err != nil {
-			return errors.Errorf("determining absolute context path: %w", err)
+			return errors.Wrap(err, "determining absolute context path")
 		}
 	}
 	return nil
@@ -96,7 +96,7 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 	for _, arg := range cfg.BuildArgs {
 		val, err := cfg.resolveWithShell(arg)
 		if err != nil {
-			return nil, errors.Errorf("resolving build arg '%s': %w", arg, err)
+			return nil, errors.Wrapf(err, "resolving build arg '%s'", arg)
 		}
 		if val != "" { // ignore empty args
 			args = append(args, "--build-arg", val)
@@ -108,13 +108,13 @@ func (cfg *config) Command() (*exec.Cmd, error) {
 	for _, tag := range cfg.Tags {
 		val, err := cfg.resolveWithShell(tag)
 		if err != nil {
-			return nil, errors.Errorf("resolving tag '%s': %w", tag, err)
+			return nil, errors.Wrapf(err, "resolving tag '%s'", tag)
 		}
 		if val == "" { // ignore empty tags
 			continue
 		}
 		if !regex.MatchString(val) {
-			return nil, errors.Errorf("'%q' is not a valid tag", val)
+			return nil, errors.Newf("'%q' is not a valid tag", val)
 		}
 		args = append(args, "--destination", fmt.Sprintf("%s:%s", cfg.Repo, val))
 	}
@@ -131,7 +131,7 @@ func (cfg *config) resolveWithShell(value string) (string, error) {
 	if err != nil {
 		if eerr, ok := err.(*exec.ExitError); ok && (len(eerr.Stderr) > 0) {
 			stderr := bytes.TrimSpace(eerr.Stderr)
-			return "", errors.Errorf("%v: %s", eerr, stderr)
+			return "", errors.Newf("%v: %s", eerr, stderr)
 		}
 		return "", err
 	}
@@ -149,15 +149,15 @@ func (cfg *config) EditDockerConfig(file *os.File) error {
 
 	// Read config from rw.
 	if err := json.NewDecoder(file).Decode(&dockerConfig); err != nil {
-		return errors.Errorf("reading file as JSON: %w", err)
+		return errors.Wrap(err, "reading file as JSON")
 	}
 
 	// Truncate file, and reset file cursor to beginning.
 	if err := file.Truncate(0); err != nil {
-		return errors.Errorf("truncating file: %w", err)
+		return errors.Wrap(err, "truncating file")
 	}
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
-		return errors.Errorf("seeking file start: %w", err)
+		return errors.Wrap(err, "seeking file start")
 	}
 
 	// Update registry auths, cred helpers.
@@ -172,7 +172,7 @@ func (cfg *config) EditDockerConfig(file *os.File) error {
 
 	// Save config to rw.
 	if err := json.NewEncoder(file).Encode(&dockerConfig); err != nil {
-		return errors.Errorf("writing to file: %w", err)
+		return errors.Wrap(err, "writing to file")
 	}
 	return nil
 }
