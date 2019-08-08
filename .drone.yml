@@ -34,8 +34,7 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
-      username:
-        from_secret: docker_user
+      username: stevenxie
       password:
         from_secret: docker_pass
       disable_gcr_helper: true
@@ -77,15 +76,14 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
-      username:
-        from_secret: docker_user
+      username: stevenxie
       password:
         from_secret: docker_pass
 
 ---
 
 kind: Pipeline
-name: revive
+name: golinter
 
 steps:
   - name: precondition
@@ -97,23 +95,26 @@ steps:
           egrep "($SUBDIR|.drone.yml)" > /dev/null || \
           exit 78
     environment:
-      SUBDIR: revive
+      SUBDIR: golinter
 
   - name: download
     image: golang:1.12
     commands:
-      - go get github.com/mgechev/revive
-      - cp $GOPATH/bin/revive ./revive/revive
+      - |
+        go get github.com/mgechev/revive && \
+        cp $GOPATH/bin/revive ./golinter/revive
+      - |
+        go get golang.org/x/tools/cmd/goimports && \
+        cp $GOPATH/bin/goimports ./golinter/goimports
     environment:
       GO111MODULE: 'off'
 
   - name: build
     image: stevenxie/kaniko-drone
     settings:
-      context: ./revive
-      repo: stevenxie/revive
+      context: ./golinter
+      repo: stevenxie/golinter
       tags: latest
-      username:
-        from_secret: docker_user
+      username: stevenxie
       password:
         from_secret: docker_pass

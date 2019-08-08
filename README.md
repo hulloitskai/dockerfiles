@@ -16,5 +16,10 @@ _Dockerfiles for personal utility images._
   runs Docker image builds on
   [Kaniko](https://github.com/GoogleContainerTools/kaniko).
 
+- [`golinter`](./golinter) – A linter for Go source code that combines
+  [`goimports`](./golang.org/x/tools/cmd/goimports),
+  [`revive`](https://github.com/mgechev/revive), and
+  [`go vet`](https://golang.org/cmd/vet/).
+
 [drone]: https://ci.stevenxie.me/stevenxie/dockerfiles
 [drone-img]: https://ci.stevenxie.me/api/badges/stevenxie/dockerfiles/status.svg
