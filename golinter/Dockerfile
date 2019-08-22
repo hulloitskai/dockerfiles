@@ -1,4 +1,4 @@
-ARG VERSION=1-alpine3.10
+ARG VERSION=latest
 FROM golang:${VERSION}
 
 # Add labels.
