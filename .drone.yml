@@ -155,6 +155,7 @@ steps:
       - unzip -d /tmp /tmp/protobuf.zip
       - chmod u+x /tmp/bin/protoc
       - mv /tmp/bin/protoc ./grpc-go
+      - mv /tmp/include ./grpc-go/include
 
   - name: download_gen
     image: golang:1.12

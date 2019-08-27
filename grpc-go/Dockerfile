@@ -9,3 +9,4 @@ LABEL org.label-schema.name=stevenxie/dockerfiles/grpc-go
 LABEL org.label-schema.vcs-url="https://github.com/stevenxie/dockerfiles"
 
 COPY protoc protoc-gen-go /usr/local/bin/
+COPY include/ /usr/local/include/
