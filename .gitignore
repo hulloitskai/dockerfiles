@@ -1,38 +1,24 @@
-## [Go]
-## Binaries for programs and plugins:
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# == Repository ==
+go.mod
+go.sum
 
-## Test binary, build with `go test -c`.
-*.test
-
-## Output of the go coverage tool, specifically when used with LiteIDE.
-*.out
-
-## Vendored packages.
-vendor/
-
-
-## [IDEs]
-## VSCode (keeping workspace configurations):
+# == IDE ==
+# VSCode (keeping workspace configurations):
 .vscode/*
 !.vscode/tasks.json
 !.vscode/extensions.json
-# !.vscode/settings.json
-# !.vscode/launch.json
+#!.vscode/settings.json
+#!.vscode/launch.json
 
-## IntelliJ:
+# IntelliJ:
 .idea/
 
 
-## [System Files]
-## macOS:
+# == System ==
+# macOS:
 .DS_Store
 .DS_Store?
 *.swp
 
-## Windows:
+# Windows:
 Thumbs.db

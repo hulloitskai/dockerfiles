@@ -4,7 +4,7 @@ name: precond-drone
 steps:
   - name: precondition
     image: alpine/git
-    commands: &precmds
+    commands:
       - "[ $(git rev-list --count HEAD) -eq 1 ] && exit 0"
       - |
         git diff --name-only HEAD~1 HEAD | \
@@ -19,7 +19,8 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
-      build_args: VERSION=$(cat VERSION)
+      build_args:
+        - VERSION=$(cat VERSION)
       username: stevenxie
       password:
         from_secret: docker_pass
@@ -53,7 +54,8 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
-      build_args: VERSION=$(cat VERSION)
+      build_args:
+        - VERSION=$(cat VERSION)
       username: stevenxie
       password:
         from_secret: docker_pass
@@ -79,17 +81,18 @@ steps:
         wget -O frp.tar.gz \
           https://github.com/fatedier/frp/releases/download/v$${VERSION}/frp_$${VERSION}_linux_amd64.tar.gz
       - tar -zxvf frp.tar.gz
-      - 'cp ./frp_$${VERSION}_linux_amd64/* . || :'
+      - "cp ./frp_$${VERSION}_linux_amd64/* . || :"
 
   - name: build
     image: stevenxie/kaniko-drone
     settings:
       context: ./frp
-      build_args: VERSION=$(cat VERSION)
       repo: stevenxie/frp
       tags:
         - latest
         - $(cat VERSION)
+      build_args:
+        - VERSION=$(cat VERSION)
       username: stevenxie
       password:
         from_secret: docker_pass
@@ -110,12 +113,12 @@ steps:
     commands:
       - |
         go get github.com/mgechev/revive && \
-        cp $GOPATH/bin/revive ./golinter/revive
+        mv $GOPATH/bin/revive ./golinter/revive
       - |
         go get golang.org/x/tools/cmd/goimports && \
-        cp $GOPATH/bin/goimports ./golinter/goimports
+        mv $GOPATH/bin/goimports ./golinter/goimports
     environment:
-      GO111MODULE: 'off'
+      GO111MODULE: "off"
 
   - name: build
     image: stevenxie/kaniko-drone
@@ -125,7 +128,50 @@ steps:
       tags:
         - latest
         - $(cat VERSION)
-      build_args: VERSION=$(cat VERSION)
+      build_args:
+        - VERSION=$(cat VERSION)
+      username: stevenxie
+      password:
+        from_secret: docker_pass
+
+---
+
+kind: Pipeline
+name: grpc-go
+
+steps:
+  - name: precondition
+    image: stevenxie/precond-drone
+    settings:
+      pattern: grpc-go\/
+
+  - name: download_protoc
+    image: alpine
+    commands:
+      - export PROTOVERSION="$(cat ./grpc-go/PROTOVERSION)"
+      - |
+        wget -O /tmp/protobuf.zip \
+          https://github.com/protocolbuffers/protobuf/releases/download/v$${PROTOVERSION}/protoc-$${PROTOVERSION}-linux-x86_64.zip && \
+      - unzip -d /tmp /tmp/protobuf.zip
+      - chmod u+x /tmp/bin/protoc
+      - mv /tmp/bin/protoc ./grpc-go
+
+  - name: download_gen
+    image: golang:1.12
+    commands:
+      - go get github.com/golang/protobuf/protoc-gen-go
+      - mv $GOPATH/bin/protoc-gen-go ./grpc-go/
+
+  - name: build
+    image: stevenxie/kaniko-drone
+    settings:
+      context: ./grpc-go
+      repo: stevenxie/grpc-go
+      tags:
+        - latest
+        - $(cat PROTOVERSION)
+      build_args:
+        - GOVERSION=$(cat GOVERSION)
       username: stevenxie
       password:
         from_secret: docker_pass

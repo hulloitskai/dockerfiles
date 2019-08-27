@@ -21,5 +21,8 @@ _Dockerfiles for personal utility images._
   [`revive`](https://github.com/mgechev/revive), and
   [`go vet`](https://golang.org/cmd/vet/).
 
+- [`grpc-go`](./grpc-go) – A builder Docker image containing Go and GRPC /
+  protobuf tooling.
+
 [drone]: https://ci.stevenxie.me/stevenxie/dockerfiles
 [drone-img]: https://ci.stevenxie.me/api/badges/stevenxie/dockerfiles/status.svg
