@@ -23,7 +23,7 @@ steps:
         - VERSION=$(cat VERSION)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
 
 ---
 
@@ -58,7 +58,7 @@ steps:
         - VERSION=$(cat VERSION)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
       disable_gcr_helper: true
 
 ---
@@ -95,7 +95,7 @@ steps:
         - VERSION=$(cat VERSION)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
 
 ---
 
@@ -132,7 +132,7 @@ steps:
         - VERSION=$(cat VERSION)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
 
 ---
 
@@ -175,4 +175,4 @@ steps:
         - GOVERSION=$(cat GOVERSION)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
